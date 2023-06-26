@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 
 from schema import Agent
+from schema import LlmModelType
 from schema import Settings 
 
 
@@ -16,138 +17,123 @@ def main():
     openai.api_key=st.secrets["OPENAI_API_KEY"]
     total_cost = 0
 
-    st.subheader('Two Agent Conversation')
+    st.subheader('Two Agent Conversation@')
+
+    settings = Settings()
 
     with st.sidebar:
 
         uploaded_file = st.file_uploader("Import settings")
         if uploaded_file is not None:
-            # To read file as bytes:
-            bytes_data = uploaded_file.getvalue()
-            #st.write(bytes_data)
+            
+            bytes_data = uploaded_file.read()
+            settings = Settings.parse_raw(bytes_data)
 
-            imported_settings = deserialize_from_json(bytes_data)
-            #st.write(imported_settings)
-            # To convert to a string based IO:
-            #stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-            #st.write(stringio)
 
-            # To read file as string:
-            #string_data = stringio.read()
-            #st.write(string_data)
 
-            agent1_title = imported_settings['agent1_title']
-            agent1_role = imported_settings['agent1_role']
-            agent2_title = imported_settings['agent2_title']
-            agent2_role = imported_settings['agent2_role']
-            model_name = imported_settings['model_name']
-            temperature = imported_settings['temperature']
-            number_of_turns = imported_settings['number_of_turns']
-        
-        #Agent 1
-        try:
-            agent1_title = agent1_title
-        except NameError:
-            agent1_title = "Agent 1"
-
-        try:
-            agent1_role = agent1_role
-        except NameError:
-            agent1_role = '''You work as sr. manager of L&D departement of Divan Manufacturing, a medium size auto part manufacturer.
-            Your company wants to deploy a new micro-learning platform and you are responsible for creating a shortlist of products for this purpose.
-            For this purpose you are intracting with a sales rep of Leap9. Leap9 sells a micro-learning platform.'''
+        agent1_title = settings.agent1.title
 
         with st.expander(agent1_title):
-            agent1_title = st.text_input('Title', agent1_title  , key='agent1_title')
-            agent1_role = st.text_area('Role Description', 
-                                       agent1_role, height=400)
-            agent1_firstMessage = st.text_area('First Message', '''
-            Hello. Can you give me more information about your product? 
-            ''', height=100)
+            settings.agent1.title = st.text_input('Title', settings.agent1.title  , key=settings.agent1.title)
+            settings.agent1.role = st.text_area('Role Description', 
+                                       settings.agent1.role, height=400)
+            settings.agent1.first_message = st.text_area('First Message',settings.agent1.first_message, height=100)
 
         #Agent 2
 
-        try:
-            agent2_title = agent2_title
-        except NameError:
-            agent2_title = "Agent 2"
+        #agent2_title = settings.agent2.title
+        # try:
+        #     agent2_title = agent2_title
+        # except NameError:
+        #     agent2_title = "Agent 2"
 
-        try:
-            agent2_role = agent2_role
-        except NameError:
-            agent2_role = 'You are sales person for Leap9. A SaaS company in micro-learning space. Leap9 main product is called Srge9. Surge9 is a mobile frist micro learning platform with powerful generative AI functionalities. You are answering questions of a potential customer.'
+        # try:
+        #     agent2_role = agent2_role
+        # except NameError:
+        #     agent2_role = 'You are sales person for Leap9. A SaaS company in micro-learning space. Leap9 main product is called Srge9. Surge9 is a mobile frist micro learning platform with powerful generative AI functionalities. You are answering questions of a potential customer.'
 
-        with st.expander(agent2_title):
-            agent2_title = st.text_input('Title', agent2_title , key='agent2_title')
-            agent2_role = st.text_area('Role Description', agent2_role,  height=400 , key='agent2_role')
+        with st.expander(settings.agent2.title):
+            settings.agent2.title = st.text_input('Title', settings.agent2.title , key='agent2_title')
+            settings.agent2.role = st.text_area('Role Description', settings.agent2.role,  height=400 , key='settings.agent2.role')
             
         try:
-            temperature = temperature
+            temperature = settings.temperature
         except NameError:
             temperature = 0.5
         
-        temperature = st.slider("Temperature", 0.0 ,1.0  ,temperature)
+        settings.temperature = st.slider("Temperature", 0.0 ,1.0  ,settings.temperature)
 
-        try:
-            model_name = model_name
-        except NameError:
-            model_name = 'gpt-3.5-turbo-0613'
+        # try:
+        #     model_name = model_name
+        # except NameError:
+        #     model_name = 'gpt-3.5-turbo-0613'
 
-        model_name = st.selectbox('Model', ('gpt-3.5-turbo-0613', 'gpt-4-0613') , index=('gpt-3.5-turbo-0613', 'gpt-4-0613').index(model_name))
+        #model_name = st.selectbox('Model', ('gpt-3.5-turbo-0613', 'gpt-4-0613') , index=('gpt-3.5-turbo-0613', 'gpt-4-0613').index(model_name))
         
-        try:
-            number_of_turns = number_of_turns
-        except NameError:
-            number_of_turns = 3
+        #m = [name["value"] for name in LlmModelType.__members__]#
+        
+        model_names = [enum.value for enum in LlmModelType]
+        print(model_names , model_names.index(settings.llm_model_type.value))
+        model_name = st.selectbox('Model', model_names, index=model_names.index(settings.llm_model_type.value))
+        selected_model = LlmModelType(model_name)
 
-        number_of_turns = st.number_input("Number of exchanges" , number_of_turns , 10)
+        # try:
+        #     number_of_turns = number_of_turns
+        # except NameError:
+        #     number_of_turns = 3
+
+        settings.number_of_turns = st.number_input("Number of exchanges" , settings.number_of_turns , 10)
 
         start = st.button("Start")
 
         #download settings
-        settings = {'agent1_title' : agent1_title,
-                     'agent1_role' : agent1_role, 
-                     'agent2_title' : agent2_title,
-                     'agent2_role' : agent2_role,
-                     'model_name' : model_name,
-                     'temperature' : temperature,
-                     'number_of_turns' : number_of_turns
-                     }
+        # settings = {'agent1_title' : agent1_title,
+        #              'agent1_role' : agent1_role, 
+        #              'agent2_title' : agent2_title,
+        #              'agent2_role' : agent2_role,
+        #              'model_name' : selected_model.value,
+        #              'temperature' : temperature,
+        #              'number_of_turns' : number_of_turns
+        #              }
+        
+        settings.llm_model_type = selected_model
+        
                     
         
-        download_settings = create_download_link(serialize_to_json(settings), 'settings.json', 'Click here to download settings')
+        download_settings = create_download_link(settings.json(), 'settings.json', 'Click here to download settings')
         st.markdown(download_settings, unsafe_allow_html=True)
 
     
     
         
     messages =  [  
-    {'role':'system', 'content': agent2_role},    
-    {'role':'user', 'content': agent1_firstMessage},  
+    {'role':'system', 'content': settings.agent2.role},    
+    {'role':'user', 'content': settings.agent1.first_message},  
     ] 
 
     
     if start:
 
-        st.write(f"**{agent1_title}**")
+        st.write(f"**{settings.agent1.title}**")
         st.write(messages[1]["content"])
 
-        for i in range(1, number_of_turns):
+        for i in range(1, settings.number_of_turns):
 
-            st.markdown(f"**{agent1_title if i%2 == 0 else agent2_title}**")
+            st.markdown(f"**{settings.agent1.title if i%2 == 0 else settings.agent2.title}**")
             #st.write(messages)
             start_time = time.time()
             with st.spinner('...'):
-                response , tokens = get_completion_from_messages(messages, temperature=temperature , model=model_name)
+                response , tokens = get_completion_from_messages(messages, temperature=temperature , model=selected_model)
             
             end_time = time.time()
             execution_time = end_time - start_time
             st.write(response)
 
-            if model_name == 'gpt-3.5-turbo-0613':
-                per_token_cost_cents = (0.2/1000)
-            elif model_name == 'gpt-4-0613':
-                per_token_cost_cents = (3/1000)
+            per_token_cost_cents , _ = selected_model.cost_per_token()
+            # if model_name == 'gpt-3.5-turbo-0613':
+            #     per_token_cost_cents = (0.2/1000)
+            # elif model_name == 'gpt-4-0613':
+            #     per_token_cost_cents = (3/1000)
 
             cost = round(float(tokens) * per_token_cost_cents , 2)
             total_cost += cost
@@ -156,7 +142,7 @@ def main():
             messages.append({'role':'assistant' if i%2 == 0 else "user" , 'content' : response })
             
             #switch roles
-            new_messages = [{'role' :'system' , 'content' : agent2_role if i%2 == 0 else agent1_role}]
+            new_messages = [{'role' :'system' , 'content' : settings.agent2.role if i%2 == 0 else settings.agent1.role}]
             for j in range(1,len(messages)):
                 new_message = {'role':'user' if i%2 == 0 else "assistant" , 'content' : messages[j]['content'] }
                 new_messages.append(new_message)
@@ -170,7 +156,7 @@ def main():
         #download
         download_str = ""
         for i in range(1,len(messages)):
-            role = agent2_title if i%2 == 0 else agent1_title
+            role = settings.agent2.title if i%2 == 0 else settings.agent1.title
             download_str += f'''{role} : 
 
 {messages[i]['content']}
@@ -185,11 +171,11 @@ def main():
 
 
 def get_completion_from_messages(messages, 
-                                 model="gpt-3.5-turbo", 
+                                 model=LlmModelType, 
                                  temperature=0, 
                                  max_tokens=500):
     response = openai.ChatCompletion.create(
-        model=model,
+        model=model.value,
         messages=messages,
         temperature=temperature, 
         max_tokens=max_tokens, 
