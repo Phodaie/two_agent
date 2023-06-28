@@ -1,4 +1,4 @@
-#from pydantic import BaseModel
+import openai
 from enum import Enum
 
 class LlmModelType(str,Enum):
@@ -27,15 +27,21 @@ class LlmModelType(str,Enum):
         
         return usage['prompt_tokens'] * prompt_token_cost + usage['completion_tokens'] * completion_token_cost
 
-'''
-    def name(self)->str:
-        match self:
-            case LlmModelType.GPT4:
-                return "gpt4"
-            case LlmModelType.GPT3_5_TURBO:
-                return "gpt3.5-turbo"
 
 
-'''
-#class LlmModel(BaseModel):
-#   type : LlmModelType = LlmModelType.GPT3_5_TURBO
+def get_completion_from_messages(messages, 
+                                 model=LlmModelType, 
+                                 temperature=0, 
+                                 max_tokens=1000):
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model=model.value,
+            messages=messages,
+            temperature=temperature, 
+            max_tokens=max_tokens, 
+        )
+    except:       
+        raise
+
+    return (response.choices[0].message["content"] , response["usage"])

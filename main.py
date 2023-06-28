@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 
 from schema import Agent
-from schema import LlmModelType
+from schema import LlmModelType, get_completion_from_messages
 from schema import Settings 
 
 
@@ -42,10 +42,10 @@ def twoAgentTab():
                 if agent.first_message:
                     agent.first_message = st.text_area('First Message', agent.first_message, height=100)
                      
-                
+
+        #UI of other settings      
         settings.temperature = st.slider("Temperature", 0.0 ,1.0  ,settings.temperature)
 
-        
         model_names = [enum.value for enum in LlmModelType]
         model_name = st.selectbox('Model', model_names, index=model_names.index(settings.llm_model_type.value))
         selected_model = LlmModelType(model_name)
@@ -152,22 +152,22 @@ def twoAgentTab():
 
 
 
-def get_completion_from_messages(messages, 
-                                 model=LlmModelType, 
-                                 temperature=0, 
-                                 max_tokens=1000):
+# def get_completion_from_messages(messages, 
+#                                  model=LlmModelType, 
+#                                  temperature=0, 
+#                                  max_tokens=1000):
     
-    try:
-        response = openai.ChatCompletion.create(
-            model=model.value,
-            messages=messages,
-            temperature=temperature, 
-            max_tokens=max_tokens, 
-        )
-    except:       
-        raise
+#     try:
+#         response = openai.ChatCompletion.create(
+#             model=model.value,
+#             messages=messages,
+#             temperature=temperature, 
+#             max_tokens=max_tokens, 
+#         )
+#     except:       
+#         raise
 
-    return (response.choices[0].message["content"] , response["usage"])
+#     return (response.choices[0].message["content"] , response["usage"])
 
 def create_download_link(string, filename, text):
     # Encode the string as bytes
