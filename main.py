@@ -1,5 +1,5 @@
 import streamlit as st
-import base64
+
 
 import os
 import openai
@@ -10,6 +10,7 @@ import json
 from schema import Agent
 from schema import LlmModelType, get_completion_from_messages
 from schema import Settings 
+from utility.file_import_export import create_download_link   
 
 
 def main():
@@ -169,16 +170,16 @@ def twoAgentTab():
 
 #     return (response.choices[0].message["content"] , response["usage"])
 
-def create_download_link(string, filename, text):
-    # Encode the string as bytes
-    string_bytes = string.encode('utf-8')
+# def create_download_link(string, filename, text):
+#     # Encode the string as bytes
+#     string_bytes = string.encode('utf-8')
     
-    # Create a base64 representation of the bytes
-    base64_str = base64.b64encode(string_bytes).decode('utf-8')
+#     # Create a base64 representation of the bytes
+#     base64_str = base64.b64encode(string_bytes).decode('utf-8')
     
-    # Create the download link
-    href = f'<a href="data:file/txt;base64,{base64_str}" download="{filename}">{text}</a>'
-    return href
+#     # Create the download link
+#     href = f'<a href="data:file/txt;base64,{base64_str}" download="{filename}">{text}</a>'
+#     return href
 
 
 
