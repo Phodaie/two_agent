@@ -14,9 +14,12 @@ from schema import Settings
 
 def main():
 
-    openai.api_key=st.secrets["OPENAI_API_KEY"]
-    total_cost = 0
+    openai.api_key=st.secrets["OPENAI_API_KEY"]    
+    twoAgentTab()
 
+
+
+def twoAgentTab():
     st.subheader('Two Agent Conversation@')
 
     settings = Settings()
@@ -31,74 +34,28 @@ def main():
 
 
 
-        agent1_title = settings.agent1.title
-
-        with st.expander(agent1_title):
-            settings.agent1.title = st.text_input('Title', settings.agent1.title  , key=settings.agent1.title)
-            settings.agent1.role = st.text_area('Role Description', 
-                                       settings.agent1.role, height=400)
-            settings.agent1.first_message = st.text_area('First Message',settings.agent1.first_message, height=100)
-
-        #Agent 2
-
-        #agent2_title = settings.agent2.title
-        # try:
-        #     agent2_title = agent2_title
-        # except NameError:
-        #     agent2_title = "Agent 2"
-
-        # try:
-        #     agent2_role = agent2_role
-        # except NameError:
-        #     agent2_role = 'You are sales person for Leap9. A SaaS company in micro-learning space. Leap9 main product is called Srge9. Surge9 is a mobile frist micro learning platform with powerful generative AI functionalities. You are answering questions of a potential customer.'
-
-        with st.expander(settings.agent2.title):
-            settings.agent2.title = st.text_input('Title', settings.agent2.title , key='agent2_title')
-            settings.agent2.role = st.text_area('Role Description', settings.agent2.role,  height=400 , key='settings.agent2.role')
-            
-        try:
-            temperature = settings.temperature
-        except NameError:
-            temperature = 0.5
-        
+       # UI for agents
+        for agent in [settings.agent1 , settings.agent2]:
+            with st.expander(agent.title):
+                agent.title = st.text_input('Title', agent.title  , key=agent.title)
+                agent.role = st.text_area('Role Description', agent.role, height=400)
+                if agent.first_message:
+                    agent.first_message = st.text_area('First Message', agent.first_message, height=100)
+                     
+                
         settings.temperature = st.slider("Temperature", 0.0 ,1.0  ,settings.temperature)
 
-        # try:
-        #     model_name = model_name
-        # except NameError:
-        #     model_name = 'gpt-3.5-turbo-0613'
-
-        #model_name = st.selectbox('Model', ('gpt-3.5-turbo-0613', 'gpt-4-0613') , index=('gpt-3.5-turbo-0613', 'gpt-4-0613').index(model_name))
-        
-        #m = [name["value"] for name in LlmModelType.__members__]#
         
         model_names = [enum.value for enum in LlmModelType]
-        print(model_names , model_names.index(settings.llm_model_type.value))
         model_name = st.selectbox('Model', model_names, index=model_names.index(settings.llm_model_type.value))
         selected_model = LlmModelType(model_name)
 
-        # try:
-        #     number_of_turns = number_of_turns
-        # except NameError:
-        #     number_of_turns = 3
 
         settings.number_of_turns = st.number_input("Number of exchanges" , settings.number_of_turns , 10)
 
         start = st.button("Start")
-
-        #download settings
-        # settings = {'agent1_title' : agent1_title,
-        #              'agent1_role' : agent1_role, 
-        #              'agent2_title' : agent2_title,
-        #              'agent2_role' : agent2_role,
-        #              'model_name' : selected_model.value,
-        #              'temperature' : temperature,
-        #              'number_of_turns' : number_of_turns
-        #              }
         
         settings.llm_model_type = selected_model
-        
-                    
         
         download_settings = create_download_link(settings.json(), 'settings.json', 'Click here to download settings')
         st.markdown(download_settings, unsafe_allow_html=True)
@@ -113,7 +70,8 @@ def main():
 
     
     if start:
-
+        total_cost = 0
+        total_seconds = 0
         st.write(f"**{settings.agent1.title}**")
         st.write(messages[1]["content"])
 
@@ -123,21 +81,44 @@ def main():
             #st.write(messages)
             start_time = time.time()
             with st.spinner('...'):
-                response , tokens = get_completion_from_messages(messages, temperature=temperature , model=selected_model)
+                try:
+                    response , usage = get_completion_from_messages(messages, temperature=settings.temperature , model=selected_model)
+                except openai.error.Timeout as e:
+                    st.error(f"OpenAI API request timed out: {e}")
+                    break
+                except openai.error.APIError as e:
+                    st.error(f"OpenAI API returned an API Error: {e}")
+                    break
+                except openai.error.APIConnectionError as e:
+                    st.error(f"OpenAI API request failed to connect: {e}")
+                    break
+                except openai.error.InvalidRequestError as e:
+                    st.error(f"OpenAI API request was invalid: {e}")
+                    break
+                except openai.error.AuthenticationError as e:
+                    st.error(f"OpenAI API request was not authorized: {e}")
+                    break
+                except openai.error.PermissionError as e:
+                    st.error(f"OpenAI API request was not permitted: {e}")
+                    break
+                except openai.error.RateLimitError as e:
+                    st.error(f"OpenAI API request exceeded rate limit: {e}")
+                    break
+                except Exception as e:
+                    st.error(f"OpenAI API: {e}")
+                    break
+
             
             end_time = time.time()
             execution_time = end_time - start_time
+            total_seconds += execution_time
             st.write(response)
-
-            per_token_cost_cents , _ = selected_model.cost_per_token()
-            # if model_name == 'gpt-3.5-turbo-0613':
-            #     per_token_cost_cents = (0.2/1000)
-            # elif model_name == 'gpt-4-0613':
-            #     per_token_cost_cents = (3/1000)
-
-            cost = round(float(tokens) * per_token_cost_cents , 2)
+           
+            cost = selected_model.cost(usage)
             total_cost += cost
-            st.write(f'*{round(execution_time, 2)} sec , {cost} cents*')
+
+
+            st.write(f'*{round(execution_time, 2)} sec , {round(cost, 2)} cents*')
 
             messages.append({'role':'assistant' if i%2 == 0 else "user" , 'content' : response })
             
@@ -150,8 +131,10 @@ def main():
             messages = new_messages
 
 
-        #total cost    
-        st.write(f'**total cost : {round(total_cost,2)} cents**')
+        #total cost and time
+        minutes, seconds = divmod(total_seconds, 60)
+        time_format = f"{minutes:.0f}:{seconds:02.0f}"   
+        st.write(f'**total cost : {round(total_cost,2)} cents** in *{time_format} seconds*')
 
         #download
         download_str = ""
@@ -169,18 +152,22 @@ def main():
 
 
 
-
 def get_completion_from_messages(messages, 
                                  model=LlmModelType, 
                                  temperature=0, 
-                                 max_tokens=500):
-    response = openai.ChatCompletion.create(
-        model=model.value,
-        messages=messages,
-        temperature=temperature, 
-        max_tokens=max_tokens, 
-    )
-    return (response.choices[0].message["content"] , response["usage"]["total_tokens"])
+                                 max_tokens=1000):
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model=model.value,
+            messages=messages,
+            temperature=temperature, 
+            max_tokens=max_tokens, 
+        )
+    except:       
+        raise
+
+    return (response.choices[0].message["content"] , response["usage"])
 
 def create_download_link(string, filename, text):
     # Encode the string as bytes
@@ -195,15 +182,6 @@ def create_download_link(string, filename, text):
 
 
 
-def serialize_to_json(obj):
-    # Convert object to JSON string
-    json_string = json.dumps(obj)
-    return json_string
-
-def deserialize_from_json(json_string):
-    # Convert JSON string to Python object
-    obj = json.loads(json_string)
-    return obj
 
 if __name__ == '__main__':
     

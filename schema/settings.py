@@ -17,7 +17,7 @@ class Settings(BaseModel):
     agent1 : Agent = Agent(title='Agent 1' , role=default_role1 , first_message='Hello. Can you give me more information about your product?' )
     agent2 : Agent = Agent(title='Agent 2' , role=default_role2)
 
-    llm_model_type : LlmModelType = LlmModelType.GPT3_5_TURBO
+    llm_model_type : LlmModelType = LlmModelType.GPT_3_5_TURBO
 
     temperature : float = Field(default=0.3, description="Temperature of the LLM")
 
