@@ -1,3 +1,6 @@
 openai
 pydantic
-streamlit 
+streamlit>=1.24.0 
+langchain>=0.0.217
+duckduckgo-search
+anthropic
