@@ -1,5 +1,5 @@
 import openai
-from openai_function_calling import OpenAISchema
+from openai_function_call import OpenAISchema
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
