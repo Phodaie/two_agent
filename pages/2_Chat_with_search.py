@@ -6,7 +6,7 @@ from langchain.callbacks import StreamlitCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.tools import DuckDuckGoSearchRun
 from schema import LlmModelType, get_completion_from_messages
-from schema import Settings 
+from schema import TwoAgentsSettings 
 
 with st.sidebar:
     model_names = [enum.value for enum in LlmModelType]
@@ -17,10 +17,7 @@ st.title("Chat with search")
 
 
 if "messages" not in st.session_state:
-    # st.session_state["messages"] = [
-    #     {"role": "assistant", "content": "Hi, I'm a chatbot who can search the web using LangChain's DuckDuckGo Search tool. How can I help you?"}
-    # ]
-
+  
     st.session_state["messages"] = []
 
 for msg in st.session_state.messages:

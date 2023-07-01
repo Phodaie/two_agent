@@ -9,7 +9,7 @@ import json
 
 from schema import Agent
 from schema import LlmModelType, get_completion_from_messages
-from schema import Settings 
+from schema import TwoAgentsSettings 
 from utility.file_import_export import create_download_link   
 
 
@@ -25,15 +25,14 @@ def main():
 def twoAgentTab():
     st.subheader('Two Agent Conversation@')
 
-    settings = Settings()
+    settings = TwoAgentsSettings()
 
     with st.sidebar:
 
         uploaded_file = st.file_uploader("Import settings")
         if uploaded_file is not None:
-            
             bytes_data = uploaded_file.read()
-            settings = Settings.parse_raw(bytes_data)
+            settings = TwoAgentsSettings.parse_raw(bytes_data)
 
 
 
