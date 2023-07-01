@@ -1,4 +1,5 @@
 import openai
+import openai_function_call
 from openai_function_call import OpenAISchema
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
