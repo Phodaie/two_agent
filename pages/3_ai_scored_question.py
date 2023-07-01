@@ -1,8 +1,8 @@
 import streamlit as st
 from pydantic import Field
 import openai
-import openai_function_call
-from openai_function_call import OpenAISchema
+
+from openai_function_calling import OpenAISchema
 import time
 import asyncio
 from datetime import datetime
