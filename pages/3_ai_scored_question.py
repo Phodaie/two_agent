@@ -12,7 +12,7 @@ from schema.settings import AIScoredQuestionSettings
 from utility.file_import_export import create_download_link
 
 class FeedbackDetails(OpenAISchema):
-        """Answer feedback"""
+        """Answer feedback store"""
         feedback: str = Field(..., description="feedback on the answer")
         score: int = Field(..., description="score of the answer")
 
