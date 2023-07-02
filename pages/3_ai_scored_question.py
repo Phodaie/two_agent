@@ -11,11 +11,94 @@ from schema import LlmModelType, get_completion_from_messages , get_completion_f
 from schema.settings import AIScoredQuestionSettings
 from utility.file_import_export import create_download_link
 
+async def  evaluateAnswers(): 
 
-class FeedbackDetails(OpenAISchema):
-    """Answer feedback"""
-    feedback: str = Field(..., description="feedback on the answer")
-    score: int = Field(..., description="score of the answer")
+    class FeedbackDetails(OpenAISchema):
+        """Answer feedback"""
+        feedback: str = Field(..., description="feedback on the answer")
+        score: int = Field(..., description="score of the answer")
+
+    #st.write(role)
+    #st.write(instructions)
+    #role = role.replace("<<question>>" , question)
+    for placeholder , value in [("<<content>>" , ais_settings.content) , ("<<question>>" , ais_settings.question) , ("<<answer>>" , answer) ]:
+        ais_settings.role = ais_settings.role.replace(placeholder , value)
+        ais_settings.instructions = ais_settings.instructions.replace(placeholder , value)
+
+    #st.write(role)
+    #st.write(ais_settings.instructions)
+
+    messages =  [  
+    {'role':'system', 'content': ais_settings.role},    
+    {'role':'user', 'content': ais_settings.instructions},  
+    ] 
+
+    tasks = []
+    for selected_model in selected_models:
+        #st.markdown(f"**{selected_model.value}**")
+        
+        start_time = time.time()
+        with st.spinner('...'):
+            try:
+                
+                #response , usage = get_completion_from_function(messages, FeedbackDetails, temperature=0 , model=selected_model)
+                # r = asyncio.run( get_completion_from_function_async(messages, FeedbackDetails, temperature=0 , model=selected_model))
+                # st.markdown(f"{r}")
+                # response = FeedbackDetails.from_response(r)
+                # usage = r["usage"]
+                task = asyncio.create_task(get_completion_from_function_async( messages, FeedbackDetails, temperature=0, model=selected_model))
+                tasks.append(task)
+            
+            except openai.error.Timeout as e:
+                st.error(f"OpenAI API request timed out: {e}")
+                break
+            except openai.error.APIError as e:
+                st.error(f"OpenAI API returned an API Error: {e}")
+                break
+            except openai.error.APIConnectionError as e:
+                st.error(f"OpenAI API request failed to connect: {e}")
+                break
+            except openai.error.InvalidRequestError as e:
+                st.error(f"OpenAI API request was invalid: {e}")
+                break
+            except openai.error.AuthenticationError as e:
+                st.error(f"OpenAI API request was not authorized: {e}")
+                break
+            except openai.error.PermissionError as e:
+                st.error(f"OpenAI API request was not permitted: {e}")
+                break
+            except openai.error.RateLimitError as e:
+                st.error(f"OpenAI API request exceeded rate limit: {e}")
+                break
+            except Exception as e:
+                st.error(f"Other error: {e}")
+                break
+    
+        # end_time = time.time()
+        # execution_time = end_time - start_time
+        # st.write(response.feedback)
+        # st.write(f"score : {response.score}")
+
+        # cost = selected_model.cost(usage)
+        # st.write(f'*{round(execution_time, 2)} sec , {round(cost, 2)} cents*')
+
+    start_time = time.time()
+
+    with st.spinner('...'):
+        responses = await asyncio.gather(*tasks)
+        for (response , usage , duration) , selected_model in zip(responses , selected_models):
+            
+            #response , usage = await task
+            st.markdown(f"**{selected_model.value}**")
+            st.write(response.feedback)
+            st.write(f"score : {response.score}")
+
+            cost = selected_model.cost(usage)
+            st.write(f'*{round(duration, 2)} sec , {round(cost, 2)} cents*')
+
+    total_time = time.time() - start_time
+    st.write(f"**total time: {round(total_time, 2)} sec**")
+
 
 st.title("AI Scored Questions")
 
@@ -64,67 +147,8 @@ with st.expander("Question/Answer"):
 evaluate = st.button('Evaluate')
 
 if evaluate:
-    #st.write(role)
-    #st.write(instructions)
-    #role = role.replace("<<question>>" , question)
-    for placeholder , value in [("<<content>>" , ais_settings.content) , ("<<question>>" , ais_settings.question) , ("<<answer>>" , answer) ]:
-        ais_settings.role = ais_settings.role.replace(placeholder , value)
-        ais_settings.instructions = ais_settings.instructions.replace(placeholder , value)
+    asyncio.run(evaluateAnswers())
 
-    #st.write(role)
-    #st.write(ais_settings.instructions)
-
-    messages =  [  
-    {'role':'system', 'content': ais_settings.role},    
-    {'role':'user', 'content': ais_settings.instructions},  
-    ] 
-
-    tasks = []
-    for selected_model in selected_models:
-        st.markdown(f"**{selected_model.value}**")
-        
-        start_time = time.time()
-        with st.spinner('...'):
-            try:
-                #response , usage = asyncio.run( aget_completion_from_messages(messages, temperature=0 , model=selected_model))
-                #response , usage = get_completion_from_messages(messages, temperature=0 , model=selected_model)
-                
-                #response , usage = get_completion_from_function(messages, FeedbackDetails, temperature=0 , model=selected_model)
-                response , usage = asyncio.run( get_completion_from_function_async(messages, FeedbackDetails, temperature=0 , model=selected_model))
-                #response, usage = await get_completion_from_function_async( messages, FeedbackDetails, temperature=0, model=selected_model)
-            
-            except openai.error.Timeout as e:
-                st.error(f"OpenAI API request timed out: {e}")
-                break
-            except openai.error.APIError as e:
-                st.error(f"OpenAI API returned an API Error: {e}")
-                break
-            except openai.error.APIConnectionError as e:
-                st.error(f"OpenAI API request failed to connect: {e}")
-                break
-            except openai.error.InvalidRequestError as e:
-                st.error(f"OpenAI API request was invalid: {e}")
-                break
-            except openai.error.AuthenticationError as e:
-                st.error(f"OpenAI API request was not authorized: {e}")
-                break
-            except openai.error.PermissionError as e:
-                st.error(f"OpenAI API request was not permitted: {e}")
-                break
-            except openai.error.RateLimitError as e:
-                st.error(f"OpenAI API request exceeded rate limit: {e}")
-                break
-            except Exception as e:
-                st.error(f"OpenAI API: {e}")
-                break
-       
-        end_time = time.time()
-        execution_time = end_time - start_time
-        st.write(response.feedback)
-        st.write(f"score : {response.score}")
-
-        cost = selected_model.cost(usage)
-        st.write(f'*{round(execution_time, 2)} sec , {round(cost, 2)} cents*')
 
 
 

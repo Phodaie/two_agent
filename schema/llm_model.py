@@ -3,6 +3,7 @@ from openai_function_call import OpenAISchema
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
+import time
 
 class LlmModelType(str,Enum):
     GPT4 = 'gpt-4-0613'
@@ -78,20 +79,23 @@ async def get_completion_from_function_async(messages,
                                  temperature=0, 
                                  max_tokens=1000):
     
+    start_time = time.time()
+
     try:
         
-        response = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello world"}])
-        # response = await openai.ChatCompletion.acreate(
-        #     model=model.value,
-        #     functions=[dataModel.openai_schema],
-        #     messages=messages,
-        #     temperature=temperature, 
-        #     max_tokens=max_tokens, 
-        # )
+        
+        response = await openai.ChatCompletion.acreate(
+            model=model.value,
+            functions=[dataModel.openai_schema],
+            messages=messages,
+            temperature=temperature, 
+            max_tokens=max_tokens, 
+        )
     except:       
         raise
 
-    return dataModel.from_response(response), response["usage"]
+    duration = time.time() - start_time
+    return dataModel.from_response(response) , response["usage"] , duration
 
 # async def aget_completion_from_messages(messages, 
 #                                  model=LlmModelType, 
@@ -110,24 +114,24 @@ async def get_completion_from_function_async(messages,
 
 #     return (response.choices[0].message["content"] , response["usage"])
 
-async def aget_completion_from_messages(messages,
-                                            model=LlmModelType,
-                                            temperature=0,
-                                            max_tokens=1000):
-    loop = asyncio.get_event_loop()
-    executor = ThreadPoolExecutor()
+# async def aget_completion_from_messages(messages,
+#                                             model=LlmModelType,
+#                                             temperature=0,
+#                                             max_tokens=1000):
+#     loop = asyncio.get_event_loop()
+#     executor = ThreadPoolExecutor()
 
-    def run_sync():
-        return openai.ChatCompletion.create(
-            model=model.value,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+#     def run_sync():
+#         return openai.ChatCompletion.create(
+#             model=model.value,
+#             messages=messages,
+#             temperature=temperature,
+#             max_tokens=max_tokens,
+#         )
 
-    try:
-        response = await loop.run_in_executor(executor, run_sync)
-    except:
-        raise
+#     try:
+#         response = await loop.run_in_executor(executor, run_sync)
+#     except:
+#         raise
 
-    return (response.choices[0].message["content"], response["usage"])
+#     return (response.choices[0].message["content"], response["usage"])
