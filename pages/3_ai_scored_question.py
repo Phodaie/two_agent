@@ -1,7 +1,7 @@
 import streamlit as st
 from pydantic import Field
 import openai
-
+import pandas as pd
 from openai_function_call import OpenAISchema
 import time
 import asyncio
@@ -19,7 +19,7 @@ class FeedbackDetails(OpenAISchema):
 def evaluateAnswers(): 
 
     for selected_model in selected_models:
-        #st.markdown(f"**{selected_model.value}**")
+        st.markdown(f"**{selected_model.value}**")
         
         start_time = time.time()
         with st.spinner('...'):
@@ -174,27 +174,78 @@ with st.sidebar:
     download_settings = create_download_link(ais_settings.json(), 'settings.json', 'Click here to download settings')
     st.markdown(download_settings, unsafe_allow_html=True)
 
+
 #question & answer inputs
-with st.expander("Question/Answer"):
-    ais_settings.question = st.text_area('Question', ais_settings.question , height=200)
-    answer = st.text_area('Answer', height=200)
+
+df = None
+
+with st.expander("From CSV"):
+    uploaded_file = st.file_uploader("Choose a file")
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        
+        
+
+if df is not None:
+
+    num_rows = df.shape[0]
+    num_cols = df.shape[1]  
+
+    for r in range(0,num_rows):
+        
+        ais_settings.question =  df.iloc[r,0]
+        st.write(f"**Question:** \n{ais_settings.question} ")
+        
+        for c in range(1,num_cols):
+            
+            answer = df.iloc[r, c]
+            if answer:
+                st.write(f"**Answer:** \n{answer} ")
+                for placeholder , value in [("<<content>>" , ais_settings.content) , ("<<question>>" , ais_settings.question) , ("<<answer>>" , answer) ]:
+                    ais_settings.role = ais_settings.role.replace(placeholder , value)
+                    ais_settings.instructions = ais_settings.instructions.replace(placeholder , value)
+                
+                messages =  [  
+                        {'role':'system', 'content': ais_settings.role},    
+                        {'role':'user', 'content': ais_settings.instructions},  
+                ] 
+                evaluateAnswers()
+
+                st.divider()
+
     
 
-evaluate = st.button('Evaluate')
+    # messages =  [  
+    # {'role':'system', 'content': ais_settings.role},    
+    # {'role':'user', 'content': ais_settings.instructions},  
+    # ]
 
-if evaluate:
+        # for row in df.itertuples():
+        #     st.write("row")
+        #     for column_name, value in row.iteritems():
+        #         st.write("col") 
 
-    for placeholder , value in [("<<content>>" , ais_settings.content) , ("<<question>>" , ais_settings.question) , ("<<answer>>" , answer) ]:
-        ais_settings.role = ais_settings.role.replace(placeholder , value)
-        ais_settings.instructions = ais_settings.instructions.replace(placeholder , value)
+else:
 
-    messages =  [  
-    {'role':'system', 'content': ais_settings.role},    
-    {'role':'user', 'content': ais_settings.instructions},  
-    ] 
+    with st.expander("Question/Answer"):
+        ais_settings.question = st.text_area('Question', ais_settings.question , height=200)
+        answer = st.text_area('Answer', height=200)
+        
+    evaluate = st.button('Evaluate')
 
-    #asyncio.run(async_evaluateAnswers())
-    evaluateAnswers()
+    if evaluate:
+
+        for placeholder , value in [("<<content>>" , ais_settings.content) , ("<<question>>" , ais_settings.question) , ("<<answer>>" , answer) ]:
+            ais_settings.role = ais_settings.role.replace(placeholder , value)
+            ais_settings.instructions = ais_settings.instructions.replace(placeholder , value)
+
+        messages =  [  
+        {'role':'system', 'content': ais_settings.role},    
+        {'role':'user', 'content': ais_settings.instructions},  
+        ] 
+
+        #asyncio.run(async_evaluateAnswers())
+        evaluateAnswers()
 
 
 
