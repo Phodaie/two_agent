@@ -1,5 +1,6 @@
 import openai
 from openai_function_call import OpenAISchema
+from typing import Optional
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
@@ -52,7 +53,7 @@ def get_completion_from_messages(messages,
     return (response.choices[0].message["content"] , response["usage"])
 
 def get_completion_from_function(messages,
-                                 dataModel,  
+                                 dataModel : Optional[OpenAISchema],  
                                  model=LlmModelType, 
                                  temperature=0, 
                                  max_tokens=1000):
@@ -60,13 +61,22 @@ def get_completion_from_function(messages,
 
     try:
        
-        response = openai.ChatCompletion.create(
-            model=model.value,
-            functions=[dataModel.openai_schema],
-            messages=messages,
-            temperature=temperature, 
-            max_tokens=max_tokens, 
-        )
+        if dataModel is None:
+            
+            response = openai.ChatCompletion.create(
+                model=model.value,
+                messages=messages,
+                temperature=temperature, 
+                max_tokens=max_tokens, 
+            )
+        else:
+            response = openai.ChatCompletion.create(
+                    model=model.value,
+                    functions=[dataModel.openai_schema],
+                    messages=messages,
+                    temperature=temperature, 
+                    max_tokens=max_tokens, 
+            )
         
     except:       
         raise

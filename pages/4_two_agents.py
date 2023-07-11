@@ -13,17 +13,18 @@ from schema import TwoAgentsSettings
 from utility.file_import_export import create_download_link 
 
 
-st.subheader('Two Agent Conversation@')
+st.subheader('Two Agents')
 
 settings = TwoAgentsSettings()
 
 with st.sidebar:
 
-    uploaded_file = st.file_uploader("Import settings")
-    if uploaded_file is not None:
-        
-        bytes_data = uploaded_file.read()
-        settings = TwoAgentsSettings.parse_raw(bytes_data)
+    with st.expander("Import Settings"):
+        uploaded_file = st.file_uploader("")
+        if uploaded_file is not None:
+            
+            bytes_data = uploaded_file.read()
+            settings = TwoAgentsSettings.parse_raw(bytes_data)
 
 
 

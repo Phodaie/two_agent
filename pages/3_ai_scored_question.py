@@ -1,3 +1,4 @@
+from typing import Optional
 import streamlit as st
 from pydantic import Field
 import openai
@@ -11,26 +12,26 @@ from schema import LlmModelType, get_completion_from_messages , get_completion_f
 from schema.settings import AIScoredQuestionSettings
 from utility.file_import_export import create_download_link
 
+
 class FeedbackDetails(OpenAISchema):
         """Answer feedback store"""
         feedback: str = Field(..., description="feedback on the answer")
         score: int = Field(..., description="score of the answer")
 
-def evaluateAnswers(): 
+def evaluateAnswers(dataModel : Optional[OpenAISchema]=None,): 
 
+    print(selected_models)
     for selected_model in selected_models:
         st.markdown(f"**{selected_model.value}**")
         
         start_time = time.time()
         with st.spinner('...'):
             try:
-                
-                response , usage = get_completion_from_function(messages, FeedbackDetails, temperature=0 , model=selected_model)
-                # r = asyncio.run( get_completion_from_function_async(messages, FeedbackDetails, temperature=0 , model=selected_model))
-                # st.markdown(f"{r}")
-                # response = FeedbackDetails.from_response(r)
-                # usage = r["usage"]
-                
+                if dataModel:
+                    response , usage = get_completion_from_function(messages,dataModel, temperature=0 , model=selected_model)
+                else:
+                    response , usage = get_completion_from_messages(messages, temperature=0 , model=selected_model)
+
             except openai.error.Timeout as e:
                 st.error(f"OpenAI API request timed out: {e}")
                 break
@@ -58,11 +59,17 @@ def evaluateAnswers():
     
         end_time = time.time()
         execution_time = end_time - start_time
-        st.write(response.feedback)
-        st.write(f"score : {response.score}")
+        if dataModel:
+            st.write(response.feedback)
+            st.write(f"score : {response.score}")
+        else:
+            st.write(response)
 
         cost = selected_model.cost(usage)
         st.write(f'*{round(execution_time, 2)} sec , {round(cost, 2)} cents*')
+
+        if dataModel is None:
+            return response
 
     
 
@@ -209,7 +216,12 @@ if df is not None:
                         {'role':'system', 'content': ais_settings.role},    
                         {'role':'user', 'content': ais_settings.instructions},  
                 ] 
-                evaluateAnswers()
+
+                # response = evaluateAnswers()
+                # messages.append({"role" : "assistant" , "content" : response})
+                # messages.append({"role" : "user" , "content" : "Reflect on your previous answer. Refine it and make corrections if needed. Store your final output in Answer Feedback Store"})
+                # print(messages)
+                evaluateAnswers(FeedbackDetails)
 
                 st.divider()
 
@@ -245,7 +257,7 @@ else:
         ] 
 
         #asyncio.run(async_evaluateAnswers())
-        evaluateAnswers()
+        evaluateAnswers(FeedbackDetails)
 
 
 
