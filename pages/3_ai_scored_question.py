@@ -8,7 +8,7 @@ import time
 import asyncio
 from datetime import datetime
 from langchain.llms import OpenAI
-from schema import LlmModelType, get_completion_from_messages , get_completion_from_function_async , get_completion_from_function
+from schema import LlmModelType, get_completion_from_messages , get_completion_from_function_async , get_completion_from_function , get_completion_anthropic
 from schema.settings import AIScoredQuestionSettings
 from utility.file_import_export import create_download_link
 
@@ -27,7 +27,10 @@ def evaluateAnswers(dataModel : Optional[OpenAISchema]=None,):
         start_time = time.time()
         with st.spinner('...'):
             try:
-                if dataModel:
+
+                if selected_model == LlmModelType.ANTHROPIC_CLOUDE_2:
+                    response  = get_completion_anthropic(messages,dataModel, temperature=0 , model=selected_model)
+                elif dataModel:
                     response , usage = get_completion_from_function(messages,dataModel, temperature=0 , model=selected_model)
                 else:
                     response , usage = get_completion_from_messages(messages, temperature=0 , model=selected_model)
@@ -59,13 +62,21 @@ def evaluateAnswers(dataModel : Optional[OpenAISchema]=None,):
     
         end_time = time.time()
         execution_time = end_time - start_time
-        if dataModel:
+
+        if selected_model == LlmModelType.ANTHROPIC_CLOUDE_2:
+            st.write(response.feedback)
+            st.write(f"score : {response.score}")
+        elif dataModel:
             st.write(response.feedback)
             st.write(f"score : {response.score}")
         else:
             st.write(response)
 
-        cost = selected_model.cost(usage)
+        if selected_model == LlmModelType.ANTHROPIC_CLOUDE_2:
+            cost = 0
+        else:
+            cost = selected_model.cost(usage)
+
         st.write(f'*{round(execution_time, 2)} sec , {round(cost, 2)} cents*')
 
         if dataModel is None:
