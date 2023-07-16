@@ -10,7 +10,7 @@ import anthropic
 st.title("📝 File Q&A with Anthropic")
 
 api_key = st.secrets["ANTHROPIC_API_KEY"]
-st.write(api_key)
+
 
 uploaded_file = st.file_uploader("Upload an article", type=("txt", "md"))
 question = st.text_input(
