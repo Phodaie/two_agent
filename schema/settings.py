@@ -1,6 +1,6 @@
 # For relative imports to work in Python 3.6
 import os, sys
-from tkinter import NO; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+#from tkinter import NO; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from pydantic import BaseModel , Field
 from typing import Optional  , ClassVar
 from agent import Agent
