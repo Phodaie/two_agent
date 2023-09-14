@@ -2,3 +2,5 @@
 /venv
 /.streamlit
 5_async_test.py
+__pycache__/
+*.py[cod]

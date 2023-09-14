@@ -1,5 +1,6 @@
 # For relative imports to work in Python 3.6
-import os, sys; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+import os, sys
+from tkinter import NO; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from pydantic import BaseModel , Field
 from typing import Optional  , ClassVar
 from agent import Agent
@@ -33,3 +34,16 @@ class AIScoredQuestionSettings(BaseModel):
     question : str = "What is Theory of Mind?"
 
     content : str = "" 
+
+class ConversationSettings(BaseModel):
+
+    temperature : float = Field(default=0.3, description="Temperature of the LLM")
+
+    llm_model_type : LlmModelType = LlmModelType.GPT_3_5_TURBO
+
+    content : str = Field(default="" , description="Content")
+
+    role : str = Field(default="" , description="Role")
+
+    instructions : str = Field(default="" , description="Instructions")
+

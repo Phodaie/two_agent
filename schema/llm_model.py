@@ -16,6 +16,10 @@ class LlmModelType(str,Enum):
     GPT_3_5_TURBO_16K = 'gpt-3.5-turbo-16k-0613'
     ANTHROPIC_CLOUDE_2 = "claude-2"
     
+    @classmethod
+    def openAI_models(cls)->list:
+        return [cls.GPT4 , cls.GPT_3_5_TURBO , cls.GPT_3_5_TURBO_16K]
+
 
     def cost(self,usage)->float:
         

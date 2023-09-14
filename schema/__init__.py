@@ -3,4 +3,4 @@ import os, sys; sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from agent import Agent
 from llm_model import LlmModelType
 from llm_model import *
-from settings import TwoAgentsSettings
+from settings import TwoAgentsSettings, ConversationSettings
