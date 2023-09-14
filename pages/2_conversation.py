@@ -37,15 +37,15 @@ with st.sidebar:
         if uploaded_file is not None:
                 settings.content = uploaded_file.read().decode('utf-8')
         
-        settings.content = st.text_area('', settings.content , height=400)
+        settings.content = st.text_area('', settings.content , height=400 , key="content_area")
 
     #role
-    with st.expander("Content"):
+    with st.expander("Role"):
         uploaded_file = st.file_uploader("", key="role_upload")
         if uploaded_file is not None:
                 settings.role = uploaded_file.read().decode('utf-8')
         
-        settings.role = st.text_area('', settings.role , height=400)
+        settings.role = st.text_area('', settings.role , height=400 , key="role_area")
 
 
 if "openai_model" not in st.session_state:
