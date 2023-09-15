@@ -50,4 +50,5 @@ class ConversationSettings(BaseModel):
     instructions : str = Field(default="" , description="Instructions")
 
     first_message : str = Field(default="Hello. How can I help you." , description="First AI message")
+    
 
