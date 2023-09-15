@@ -4,7 +4,7 @@ from schema import LlmModelType, ConversationSettings
 
 
 
-st.title("ChatGPT-like clone")
+st.subheader("Simulation")
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -30,14 +30,20 @@ with st.sidebar:
     selected_model = LlmModelType(model_name)
     settings.llm_model_type = selected_model
 
+    #first message
+    settings.first_message = st.text_area('First message', settings.first_message , height=100 , key="first_message_area")
+    '''placeholders: <<title>>'''
 
     #content
     with st.expander("Content"):
         uploaded_file = st.file_uploader("", key="content_upload")
         if uploaded_file is not None:
                 settings.content = uploaded_file.read().decode('utf-8')
+                print("#############$$$$$$$$$$$$$$%%%%%%%%%%%",uploaded_file.name)
         
         settings.content = st.text_area('', settings.content , height=400 , key="content_area")
+
+        
 
     #role
     with st.expander("Role"):
@@ -46,15 +52,30 @@ with st.sidebar:
                 settings.role = uploaded_file.read().decode('utf-8')
         
         settings.role = st.text_area('', settings.role , height=400 , key="role_area")
+        '''placeholders: <<content>> , <<title>>'''
+    
+    #role
+    with st.expander("Instructions"):
+        uploaded_file = st.file_uploader("", key="instructions_upload")
+        if uploaded_file is not None:
+                settings.role = uploaded_file.read().decode('utf-8')
+        
+        settings.instructions = st.text_area('', settings.instructions , height=400 , key="instructions_area")
+        '''placeholders: <<content>> , <<title>>'''
 
 
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+         {"role": "system", "content": settings.role},
+         {"role": "assistant", "content": settings.first_message}
+         ]
 
 for message in st.session_state.messages:
+    if message["role"] == "system": continue
+
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 

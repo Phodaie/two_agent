@@ -41,9 +41,13 @@ class ConversationSettings(BaseModel):
 
     llm_model_type : LlmModelType = LlmModelType.GPT_3_5_TURBO
 
+    title : str = Field(default="Anis" , description="Title of the AI")
+    
     content : str = Field(default="" , description="Content")
 
     role : str = Field(default="" , description="Role")
 
     instructions : str = Field(default="" , description="Instructions")
+
+    first_message : str = Field(default="Hello. How can I help you." , description="First AI message")
 
