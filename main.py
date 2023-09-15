@@ -17,7 +17,7 @@ def main():
 
     openai.api_key=st.secrets["OPENAI_API_KEY"]    
     #twoAgentTab()
-    st.subheader("Surge9 Generative AI Tools")
+    st.subheader("Surge9 AI Playground")
 
 
 
