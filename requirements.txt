@@ -7,3 +7,4 @@ anthropic
 asyncio
 openai_function_call
 pandas
+elevenlabs

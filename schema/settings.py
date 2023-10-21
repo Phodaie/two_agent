@@ -51,4 +51,6 @@ class ConversationSettings(BaseModel):
 
     first_message : str = Field(default="Hello. How can I help you." , description="First AI message")
     
+    eval_role : str = Field(default="" , description="Role for evaluation")
+    eval_instructions : str = Field(default="" , description="Instructions for evaluation")
 

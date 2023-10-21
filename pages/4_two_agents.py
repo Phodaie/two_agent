@@ -7,6 +7,9 @@ import time
 from datetime import datetime
 import json
 
+from elevenlabs import clone, generate, play, set_api_key
+from elevenlabs.api import History
+
 from schema import Agent
 from schema import LlmModelType, get_completion_from_messages
 from schema import TwoAgentsSettings
@@ -101,11 +104,24 @@ if start:
             except Exception as e:
                 st.error(f"OpenAI API: {e}")
                 break
+        
+            set_api_key("e78bc29cdc5b72d0760c84e57078786c")
 
+            audio = generate(
+                text=response,
+                voice="Bella" if i%2 == 0 else "Adam" ,
+                model='eleven_monolingual_v1'
+            )
+
+            #st.audio(data=audio)
+            play(audio)
         
         end_time = time.time()
         execution_time = end_time - start_time
         total_seconds += execution_time
+
+        
+
         st.write(response)
         
         cost = selected_model.cost(usage)

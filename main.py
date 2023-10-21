@@ -12,15 +12,61 @@ from schema import LlmModelType, get_completion_from_messages
 from schema import TwoAgentsSettings 
 from utility.file_import_export import create_download_link   
 
+#from elevenlabs import clone, generate, play, set_api_key
+from elevenlabs.api import History
 
 def main():
 
-    openai.api_key=st.secrets["OPENAI_API_KEY"]    
-    #twoAgentTab()
+    # set_api_key("e78bc29cdc5b72d0760c84e57078786c")
+
+    # audio = generate(
+    #     text="Hi! My name is Bella, nice to meet you!",
+    #     voice="Bella",
+    #     model='eleven_monolingual_v1'
+    # )
+
+    #st.audio(data=audio)
+    openai.api_key=st.secrets["OPENAI_API_KEY"]   
+
+
+    aiInstructions = """
+    Conduct a casual conversation with a construction worker named {{User.FirstName}} in order to determine how well he/she can identify potential hazards on a construction scenario described in the “Jobsite Scenario” section of the content enclosed in ###Content below. He has already read a description of this scenario.
+
+    Ask him up to 3 questions in order to determine if he can identify the potential hazards in this scenario. Your questions should be only on this scenario.
+
+    Ask him for clarification if you don’t understand his answer. Don’t provide any feedback to him after each question. Just acknowledge his answer and move on.
+
+    Use the material described in the “Sample Fatality Investigation Report” section of the content enclosed in ###Content below to formulate your questions. Don’t make any explicit references to the fatality report.
+
+    Don’t allow the conversation to deviate from the topic of this scenario. Don’t number your questions.
+
+    #IF {{previousSessions}} == true
+
+    Base your conversation on the previous conversation and evaluation of those conversations enclosed in <pre> tags. It should naturally flow from what was covered before. Always ask one question at the time.
+    <pre>
+
+    {{Simulation.PreviousSessions}}
+
+    </pre>
+
+    #ENDIF
+
+    ###Content
+    {{AI.ReferenceContent}}
+    ###
+
+    """ 
+    
     st.subheader("Surge9 AI Playground")
 
+    #write aiInstructions to file
+    with open("aiInstructions.txt", "w") as text_file:
+        text_file.write(aiInstructions) 
 
+    with open("aiInstructions.txt", "r") as text_file:
+        aiInstructions = text_file.read()
 
+    st.write(aiInstructions)
 
 def twoAgentTab():
     st.subheader('Two Agent Conversation@')
@@ -154,33 +200,7 @@ def twoAgentTab():
 
 
 
-# def get_completion_from_messages(messages, 
-#                                  model=LlmModelType, 
-#                                  temperature=0, 
-#                                  max_tokens=1000):
-    
-#     try:
-#         response = openai.ChatCompletion.create(
-#             model=model.value,
-#             messages=messages,
-#             temperature=temperature, 
-#             max_tokens=max_tokens, 
-#         )
-#     except:       
-#         raise
 
-#     return (response.choices[0].message["content"] , response["usage"])
-
-# def create_download_link(string, filename, text):
-#     # Encode the string as bytes
-#     string_bytes = string.encode('utf-8')
-    
-#     # Create a base64 representation of the bytes
-#     base64_str = base64.b64encode(string_bytes).decode('utf-8')
-    
-#     # Create the download link
-#     href = f'<a href="data:file/txt;base64,{base64_str}" download="{filename}">{text}</a>'
-#     return href
 
 
 
