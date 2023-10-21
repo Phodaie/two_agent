@@ -12,9 +12,6 @@ from schema import LlmModelType, get_completion_from_messages
 from schema import TwoAgentsSettings 
 from utility.file_import_export import create_download_link   
 
-#from elevenlabs import clone, generate, play, set_api_key
-from elevenlabs.api import History
-
 def main():
 
     # set_api_key("e78bc29cdc5b72d0760c84e57078786c")
